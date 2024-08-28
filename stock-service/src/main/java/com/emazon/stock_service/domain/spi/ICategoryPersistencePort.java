@@ -2,15 +2,14 @@ package com.emazon.stock_service.domain.spi;
 
 import com.emazon.stock_service.domain.model.Category;
 
-import java.util.List;
+import java.util.Optional;
+
 
 public interface ICategoryPersistencePort {
 
+    Optional<Category> findByName(String name);
         void saveCategory(Category category);
-        Category getCategoryByName(String name); // Para obtener una categoría específica por nombre
-        List<Category> getAllCategories(Integer page, Integer size); // Para obtener todas las categorías con paginación
-        Category updateCategory(Category category);
-        void deleteCategory(Long id);
+
     }
 
 
