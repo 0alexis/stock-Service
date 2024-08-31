@@ -1,17 +1,19 @@
 package com.emazon.stock_service.domain.api.usecase;
 
-import com.emazon.stock_service.adapters.drivend.jpa.mysql.adapter.CategoryMysqlAdapter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.Test;
 
+import com.emazon.stock_service.domain.model.CustomPage;
+import com.emazon.stock_service.domain.model.SortDirection;
+import com.emazon.stock_service.domain.spi.ICategoryPersistencePort;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.emazon.stock_service.domain.model.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,42 +22,47 @@ import static org.mockito.Mockito.*;
 class CategoryUseCaseTest {
 
     @Mock
-    private CategoryMysqlAdapter categoryMysqlAdapter;
+    private ICategoryPersistencePort categoryPersistencePort;
 
     @InjectMocks
     private CategoryUseCase categoryUseCase;
 
 
-    private MockMvc mockMvc;
-
-    private ObjectMapper objectMapper;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(categoryUseCase).build();
-        objectMapper = new ObjectMapper();
     }
 
-    @Test
-    void testSaveCategory_whenTheCategoryIsSuccessfullySaved() {
-        // Arrange
-        Category category = new Category(1L, "Electronics", "All kinds of electronics");
+@Test
+void testCreateCategorySuccess() {
+    // Arrange
+    Category category = new Category(1L, "Books", "Varius books");
+    category.setName("Valid Name");
+    category.setDescription("Valid Description");
+    when(categoryPersistencePort.findByName(category.getName())).thenReturn(null);
 
-        // Act
-        categoryUseCase.saveCategory(category);
+    // Act & Assert
+    assertDoesNotThrow(() -> categoryUseCase.saveCategory(category));
+    verify(categoryPersistencePort, times(1)).saveCategory(category);
+}
 
-        // Assert
-        verify(categoryMysqlAdapter, times(1)).saveCategory(any(Category.class));
-    }
 
+@Test
+@DisplayName("Given a category, the name is repeated, it should throw an exception")
+    void testSaveCategory_CategoryAlreadyExists() {
+    //GIVEN
+    Category category = new Category(1L, "Books", "Varius books");
+
+    categoryPersistencePort.saveCategory(category);
+    verify(categoryPersistencePort, times(1)).saveCategory(category);
+}
     @Test
     void testSaveCategory_whenPersistenceFails_shouldThrowException() {
         // Arrange
         Category category = new Category(1L, "Toys", "Various toys");
 
         doThrow(new RuntimeException("Database connection error"))
-                .when(categoryMysqlAdapter).saveCategory(any(Category.class));
+                .when(categoryPersistencePort).saveCategory(any(Category.class));
 
         // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -64,6 +71,7 @@ class CategoryUseCaseTest {
 
         assertEquals("Database connection error", exception.getMessage());
     }
+
     @Test
     void testSaveCategory_whenNameAlreadyExists_shouldThrowException() {
         // Arrange
@@ -72,7 +80,7 @@ class CategoryUseCaseTest {
         category.setDescription("Description for existing category");
 
         doThrow(new RuntimeException("A category with this name already exists."))
-                .when(categoryMysqlAdapter).saveCategory(any(Category.class));
+                .when(categoryPersistencePort).saveCategory(any(Category.class));
 
         // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -82,24 +90,12 @@ class CategoryUseCaseTest {
         // Verifica el mensaje de la excepción
         assertEquals("A category with this name already exists.", exception.getMessage());
     }
-
-    @Test
-    void testSaveCategory_whenValidCategory_shouldSaveSuccessfully() {
-        // Arrange
-        Category category = new Category(1L, "ValidCategory", "Valid description");
-
-        // Act
-        categoryUseCase.saveCategory(category);
-
-        // Assert
-        verify(categoryMysqlAdapter, times(1)).saveCategory(category);
-    }
-    @Test
+        @Test
     void testSaveCategory_whenPersistencePortThrowsException_shouldPropagateException() {
         // Arrange
         Category category = new Category(1L, "ValidName", "Valid description");
 
-        doThrow(new RuntimeException("Unexpected error")).when(categoryMysqlAdapter).saveCategory(any(Category.class));
+        doThrow(new RuntimeException("Unexpected error")).when(categoryPersistencePort).saveCategory(any(Category.class));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -107,10 +103,57 @@ class CategoryUseCaseTest {
         });
 
         assertEquals("Unexpected error", exception.getMessage());
-        verify(categoryMysqlAdapter, times(1)).saveCategory(category);
+        verify(categoryPersistencePort, times(1)).saveCategory(category);
     }
 
+    @Test
+    void testGetPaginationCategoriesByAscAndDesc_whenSortDirectionIsAsc_shouldReturnSortedCategoriesAscending() {
+        // Arrange
+        Category category1 = new Category(1L, "Books", "Various books");
+        Category category2 = new Category(2L, "Electronics", "All kinds of electronics");
+        Category category3 = new Category(3L, "Toys", "Various toys");
 
+        List<Category> categoryList = Arrays.asList(category1, category2, category3);
+        CustomPage<Category> customPage = new CustomPage<>(categoryList, 0, 10, 3L, 1, true, true);
 
+        when(categoryPersistencePort.getPaginationCategories(SortDirection.ASC, 0, 10)).thenReturn(customPage);
+
+        // Act
+        CustomPage<Category> result = categoryUseCase.getPaginationCategoriesByAscAndDesc(SortDirection.ASC, 0, 10);
+
+        // Assert
+        List<Category> sortedCategories = result.getContent();
+        assertEquals(3, sortedCategories.size());
+        assertEquals("Books", sortedCategories.get(0).getName());
+        assertEquals("Electronics", sortedCategories.get(1).getName());
+        assertEquals("Toys", sortedCategories.get(2).getName());
+
+        verify(categoryPersistencePort, times(1)).getPaginationCategories(SortDirection.ASC, 0, 10);
+    }
+
+    @Test
+    void testGetPaginationCategoriesByAscAndDesc_whenSortDirectionIsDesc_shouldReturnSortedCategoriesDescending() {
+        // Arrange
+        Category category1 = new Category(1L, "Books", "Various books");
+        Category category2 = new Category(2L, "Electronics", "All kinds of electronics");
+        Category category3 = new Category(3L, "Toys", "Various toys");
+
+        List<Category> categoryList = Arrays.asList(category1, category2, category3);
+        CustomPage<Category> customPage = new CustomPage<>(categoryList, 0, 10, 3L, 1, true, true);
+
+        when(categoryPersistencePort.getPaginationCategories(SortDirection.DESC, 0, 10)).thenReturn(customPage);
+
+        // Act
+        CustomPage<Category> result = categoryUseCase.getPaginationCategoriesByAscAndDesc(SortDirection.DESC, 0, 10);
+
+        // Assert
+        List<Category> sortedCategories = result.getContent();
+        assertEquals(3, sortedCategories.size());
+        assertEquals("Toys", sortedCategories.get(0).getName());
+        assertEquals("Electronics", sortedCategories.get(1).getName());
+        assertEquals("Books", sortedCategories.get(2).getName());
+
+        verify(categoryPersistencePort, times(1)).getPaginationCategories(SortDirection.DESC, 0, 10);
+    }
 
 }

@@ -2,6 +2,7 @@ package com.emazon.stock_service.adapters.drivinghttp.dto.request;
 
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 
@@ -15,12 +16,21 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class AddCategoryRequest {
+    /**
+     * @Pattern(regexp = "^[a-zA-Z]+$", message = "Name must contain only letters")
+     * Valida que el campo contenga solo letras (mayúsculas y minúsculas) sin
+     * espacios, números ni caracteres especiales.
+     * Si la validación falla, se mostrará el mensaje:
+     * "Description must contain only letters".
+     */
 
     @NotBlank(message = DrivingConstant.FIELD_NAME_NULL_MESSEGE)
     @Size(min = 1, max = 50, message = DrivingConstant.FIELD_NAME_EXCEEDED_SIZE_MESSEGE)
+    @Pattern(regexp = "^[a-zA-Z]+$", message = "Name must contain only letters")
     private  String name;
 
     @NotBlank(message = DrivingConstant.FIELD_DESCRIPTION_NULL_MESSEGE)
     @Size(min = 1, max = 90, message = DrivingConstant.FIELD_DESCRIPTION_EXCEEDED_SIZE_MESSEGE)
+    @Pattern(regexp = "^[a-zA-Z]+$", message = "Description must contain only letters")
     private  String description;
 }

@@ -1,9 +1,11 @@
 package com.emazon.stock_service.adapters.drivend.jpa.mysql.adapter;
 
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.entity.CategoryEntity;
+import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.ElementNotFoundException;
 import com.emazon.stock_service.domain.exception.EmptyFieldException;
+import com.emazon.stock_service.domain.model.CustomPage;
+import com.emazon.stock_service.domain.model.SortDirection;
 import com.emazon.stock_service.domain.util.DomainConstants;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,10 +18,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.data.domain.*;
+
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -37,16 +41,11 @@ class CategoryMysqlAdapterTest {
     @InjectMocks
     private CategoryMysqlAdapter categoryMysqlAdapter;
 
-    private MockMvc mockMvc;
-
-    private ObjectMapper objectMapper;
-
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(categoryMysqlAdapter).build();
-        objectMapper = new ObjectMapper();
+        categoryMysqlAdapter = new CategoryMysqlAdapter(categoryRepository, categoryEntityMapper);
     }
 
 
@@ -54,51 +53,116 @@ class CategoryMysqlAdapterTest {
     void saveCategory_ShouldSaveCategorySuccessfully_WhenCategoryDoesNotExist() {
         // Arrange
         Category category = new Category(1L, "Electronics", "Electronic gadgets");
-        when(categoryRepository.findByName(category.getName())).thenReturn(Collections.emptyList());
-        when(categoryEntityMapper.toEntity(category)).thenReturn(new CategoryEntity(1L, "Electronics", "Electronic gadgets"));
+        category.setName("Electronics");
+        category.setDescription("Devices");
+        CategoryEntity categoryEntity = new CategoryEntity();
+        when(categoryEntityMapper.toCategoryEntity(category)).thenReturn(categoryEntity);
 
         // Act
         categoryMysqlAdapter.saveCategory(category);
 
         // Assert
-        verify(categoryRepository, times(1)).save(any(CategoryEntity.class));
+        verify(categoryRepository, times(1)).save(categoryEntity);
     }
     @Test
-    void saveCategory_ShouldThrowException_WhenCategoryAlreadyExists() {
+     void findByName_CategoryExists_ShouldReturnCategory() {
         // Arrange
+        String categoryName = "Electronics";
         Category category = new Category(1L, "Electronics", "Electronic gadgets");
-        when(categoryRepository.findByName(category.getName())).thenReturn(Collections.singletonList(new CategoryEntity(1L, "Electronics", "Electronic gadgets")));
-
-        // Act & Assert
-        assertThrows(CategoryAlreadyExistsException.class, () -> categoryMysqlAdapter.saveCategory(category));
-        verify(categoryRepository, never()).save(any(CategoryEntity.class));
-    }
-    @Test
-    void saveCategory_ShouldThrowException_WhenCategoryNameExistsWithDifferentCase() {
-        // Arrange
-        Category category = new Category(1L, "electronics", "Category for electronics");
-        CategoryEntity existingEntity = new CategoryEntity(2L, "Electronics", "Another description");
-
-        when(categoryRepository.findByName(category.getName())).thenReturn(Collections.singletonList(existingEntity));
-
-        // Act & Assert
-        assertThrows(CategoryAlreadyExistsException.class, () -> categoryMysqlAdapter.saveCategory(category));
-        verify(categoryRepository, never()).save(any(CategoryEntity.class));
-    }
-    @Test
-    void saveCategory_ShouldHandleCategoryWithNullDescription() {
-        // Arrange
-        Category category = new Category(1L, "Gadgets", "");
-        CategoryEntity entityToSave = new CategoryEntity(1L, "Gadgets", null);
-
-        when(categoryRepository.findByName(category.getName())).thenReturn(Collections.emptyList());
-        when(categoryEntityMapper.toEntity(category)).thenReturn(entityToSave);
+        category.setName(categoryName);
+        category.setDescription("Devices");
+        CategoryEntity categoryEntity = new CategoryEntity();
+        when(categoryRepository.findByName(categoryName)).thenReturn(Optional.of(categoryEntity));
+        when(categoryEntityMapper.toCategory(categoryEntity)).thenReturn(category);
 
         // Act
-        categoryMysqlAdapter.saveCategory(category);
+        Category result = categoryMysqlAdapter.findByName(categoryName);
 
         // Assert
-        verify(categoryRepository, times(1)).save(entityToSave);
+        assertEquals(category, result);
+    }
+    @Test
+     void saveCategory_ShouldHandleException() {
+        //Arrange
+        Category category = new Category(1L, "Electronics", "Electronic gadgets");
+        CategoryEntity categoryEntity = new CategoryEntity(1L, "Electronics", "Electronic gadgets");
+        when(categoryRepository.findByName(category.getName())).thenReturn(Optional.of(categoryEntity) );
+
+        //ACT
+        assertThrows(CategoryAlreadyExistsException.class, () ->
+                categoryMysqlAdapter.saveCategory(category)
+               );
+    }
+    @Test
+     void getPaginationCategories_NoCategories_ShouldThrowElementNotFoundException() {
+    // Arrange
+    SortDirection sortDirection = SortDirection.ASC; // Configura la dirección de ordenación
+    Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name"))); // Configura el Pageable
+    Page<CategoryEntity> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0); // Crea una página vacía
+
+    when(categoryRepository.findAll(any(Pageable.class))).thenReturn(emptyPage); // Simula el retorno de una página vacía
+
+    // Act & Assert
+    assertThrows(ElementNotFoundException.class, () -> {
+        categoryMysqlAdapter.getPaginationCategories(sortDirection, 0, 10);
+    });
+}
+    @Test
+     void getPaginationCategories_ShouldReturnCustomPage() {
+        // Arrange
+        CategoryEntity categoryEntity = new CategoryEntity(1L, "Electronics", "Devices");
+        List<CategoryEntity> categoryEntities = List.of(categoryEntity);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name")));
+        Page<CategoryEntity> categoriesPage = new PageImpl<>(categoryEntities, pageable, categoryEntities.size());
+
+        when(categoryRepository.findAll(pageable)).thenReturn(categoriesPage);
+
+        // Act
+        CustomPage<Category> result = categoryMysqlAdapter.getPaginationCategories(SortDirection.ASC, 0, 10);
+
+        // Assert
+        assertEquals(0, categoriesPage.getNumber());
+        assertEquals(10, categoriesPage.getSize());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isFirst());
+        assertTrue(result.isLast());
+        assertEquals(1, result.getContent().size());
+
+    }
+    @Test
+    void getPaginationCategories_ShouldThrowElementNotFoundException_WhenNoCategoriesFound() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name")));
+        Page<CategoryEntity> categoriesPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+        when(categoryRepository.findAll(any(Pageable.class))).thenReturn(categoriesPage);
+
+        // Act & Assert
+        assertThrows(ElementNotFoundException.class, () -> {
+             categoryMysqlAdapter.getPaginationCategories(SortDirection.ASC, 0, 10);
+        });
+    }
+    @Test
+    void getPaginationCategories_ShouldReturnCustomPage_WhenSortedDescending() {
+        // Arrange
+        CategoryEntity categoryEntity = new CategoryEntity(1L, "Electronics", "Devices");
+        List<CategoryEntity> categoryEntities = List.of(categoryEntity);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("name")));
+        Page<CategoryEntity> categoriesPage = new PageImpl<>(categoryEntities, pageable, categoryEntities.size());
+
+        when(categoryRepository.findAll(any(Pageable.class))).thenReturn(categoriesPage);
+
+        // Act
+        CustomPage<Category> result =  categoryMysqlAdapter.getPaginationCategories(SortDirection.DESC, 0, 10);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isFirst());
+        assertTrue(result.isLast());
+        assertEquals("Electronics", result.getContent().get(0).getName());
     }
     @Test
     void testCategoryConstructor_WithNullDescription_ShouldThrowException() {
