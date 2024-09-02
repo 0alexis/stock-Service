@@ -1,12 +1,9 @@
-package com.emazon.stock_service.domain.api.usecase;
+package com.emazon.stock_service.domain.usecase;
 
 
-import com.emazon.stock_service.domain.model.Brand;
 import com.emazon.stock_service.domain.model.CustomPage;
 import com.emazon.stock_service.domain.model.SortDirection;
 import com.emazon.stock_service.domain.spi.ICategoryPersistencePort;
-import com.emazon.stock_service.domain.usecase.CategoryUseCase;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import com.emazon.stock_service.domain.model.Category;
@@ -47,18 +44,7 @@ class CategoryUseCaseTest {
     assertDoesNotThrow(() -> categoryUseCase.saveCategory(category));
     verify(categoryPersistencePort, times(1)).saveCategory(category);
 }
-    @Test
-    void testCreateBrandSuccess() {
-        // Arrange
-        Brand brand = new Brand(1L, "Brand", "Description");
-        brand.setName("Valid Name");
-        brand.setDescription("Valid Description");
-        when(categoryPersistencePort.findByName(brand.getName())).thenReturn(null);
 
-        // Act & Assert
-        assertDoesNotThrow(() -> categoryUseCase.saveCategory(brand));
-        verify(categoryPersistencePort, times(1)).saveCategory(brand);
-    }
     @Test
     void testSaveCategory_CategoryAlreadyExists() {
     //GIVEN

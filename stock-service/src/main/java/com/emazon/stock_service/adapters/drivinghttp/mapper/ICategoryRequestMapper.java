@@ -5,6 +5,7 @@ import com.emazon.stock_service.adapters.drivinghttp.dto.request.*;
 import com.emazon.stock_service.domain.model.Category;
 import com.emazon.stock_service.domain.model.SortDirection;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 
@@ -16,9 +17,9 @@ public interface ICategoryRequestMapper {
 
 
 //    @Mapping(target = "id", ignore = true)
-//    @Mapping(source = "name", target = "name")
-//    @Mapping(source = "description", target = "description")
+//    @Mapping(source = "description", target =
 
+      @Mapping(source = "name", target = "name")
     Category addRequestToCategory(AddCategoryRequest addCategoryRequest);
     SortDirection toSortDirection(SortDirectionRequest sortDirectionRequestDto);
 
