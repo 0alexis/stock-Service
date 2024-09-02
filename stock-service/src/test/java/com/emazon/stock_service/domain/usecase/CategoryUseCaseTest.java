@@ -1,9 +1,11 @@
 package com.emazon.stock_service.domain.api.usecase;
 
 
+import com.emazon.stock_service.domain.model.Brand;
 import com.emazon.stock_service.domain.model.CustomPage;
 import com.emazon.stock_service.domain.model.SortDirection;
 import com.emazon.stock_service.domain.spi.ICategoryPersistencePort;
+import com.emazon.stock_service.domain.usecase.CategoryUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,8 +35,8 @@ class CategoryUseCaseTest {
         MockitoAnnotations.openMocks(this);
     }
 
-@Test
-void testCreateCategorySuccess() {
+    @Test
+    void testCreateCategorySuccess() {
     // Arrange
     Category category = new Category(1L, "Books", "Varius books");
     category.setName("Valid Name");
@@ -45,10 +47,19 @@ void testCreateCategorySuccess() {
     assertDoesNotThrow(() -> categoryUseCase.saveCategory(category));
     verify(categoryPersistencePort, times(1)).saveCategory(category);
 }
+    @Test
+    void testCreateBrandSuccess() {
+        // Arrange
+        Brand brand = new Brand(1L, "Brand", "Description");
+        brand.setName("Valid Name");
+        brand.setDescription("Valid Description");
+        when(categoryPersistencePort.findByName(brand.getName())).thenReturn(null);
 
-
-@Test
-@DisplayName("Given a category, the name is repeated, it should throw an exception")
+        // Act & Assert
+        assertDoesNotThrow(() -> categoryUseCase.saveCategory(brand));
+        verify(categoryPersistencePort, times(1)).saveCategory(brand);
+    }
+    @Test
     void testSaveCategory_CategoryAlreadyExists() {
     //GIVEN
     Category category = new Category(1L, "Books", "Varius books");
@@ -71,7 +82,6 @@ void testCreateCategorySuccess() {
 
         assertEquals("Database connection error", exception.getMessage());
     }
-
     @Test
     void testSaveCategory_whenNameAlreadyExists_shouldThrowException() {
         // Arrange
@@ -90,7 +100,7 @@ void testCreateCategorySuccess() {
         // Verifica el mensaje de la excepción
         assertEquals("A category with this name already exists.", exception.getMessage());
     }
-        @Test
+    @Test
     void testSaveCategory_whenPersistencePortThrowsException_shouldPropagateException() {
         // Arrange
         Category category = new Category(1L, "ValidName", "Valid description");
@@ -105,7 +115,6 @@ void testCreateCategorySuccess() {
         assertEquals("Unexpected error", exception.getMessage());
         verify(categoryPersistencePort, times(1)).saveCategory(category);
     }
-
     @Test
     void testGetPaginationCategoriesByAscAndDesc_whenSortDirectionIsAsc_shouldReturnSortedCategoriesAscending() {
         // Arrange
@@ -130,7 +139,6 @@ void testCreateCategorySuccess() {
 
         verify(categoryPersistencePort, times(1)).getPaginationCategories(SortDirection.ASC, 0, 10);
     }
-
     @Test
     void testGetPaginationCategoriesByAscAndDesc_whenSortDirectionIsDesc_shouldReturnSortedCategoriesDescending() {
         // Arrange
