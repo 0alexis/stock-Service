@@ -1,15 +1,17 @@
 package com.emazon.stock_service.domain.spi;
 
 import com.emazon.stock_service.domain.model.Category;
-
-import java.util.Optional;
+import com.emazon.stock_service.domain.model.CustomPage;
+import com.emazon.stock_service.domain.model.SortDirection;
 
 
 public interface ICategoryPersistencePort {
 
-    Optional<Category> findByName(String name);
-        void saveCategory(Category category);
+    void saveCategory(Category category);
+    Category findByName(String name);
+    //CustomPage<Category> getPaginationCategories(int page, int size);
+    CustomPage<Category> getPaginationCategories(SortDirection sortDirection, int page, int size);
+}
 
-    }
 
 

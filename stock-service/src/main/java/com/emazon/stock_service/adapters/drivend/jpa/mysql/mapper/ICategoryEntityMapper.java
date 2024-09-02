@@ -1,23 +1,22 @@
 package com.emazon.stock_service.adapters.drivend.jpa.mysql.mapper;
 
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.entity.CategoryEntity;
+import com.emazon.stock_service.adapters.drivinghttp.dto.response.CategoryPaginationResponse;
 import com.emazon.stock_service.domain.model.Category;
+import com.emazon.stock_service.domain.model.CustomPage;
 import org.mapstruct.Mapper;
-
-import java.util.List;
-
+import org.mapstruct.ReportingPolicy;
 
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        unmappedSourcePolicy = ReportingPolicy.IGNORE)
 
 public interface ICategoryEntityMapper {
-    // @Mapping(source = "id", target = "id")
-    // @Mapping(source = "name", target = "name")
 
-    Category toModel(CategoryEntity categoryEntity);
-    // @Mapping(source = "id", target = "id")
-    // @Mapping(source = "name", target = "name")
+    Category toCategory(CategoryEntity categoryEntity);
+    CategoryEntity toCategoryEntity(Category category);
+    CategoryPaginationResponse toCategoryPaginationResponse(CategoryEntity categoryEntity);
+    CustomPage toCustomPage(CategoryEntity categoryEntity);
 
-    CategoryEntity toEntity(Category category);
-    List<Category> toModelList(List<CategoryEntity> categoryEntities);
 }
