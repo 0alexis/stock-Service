@@ -200,8 +200,4 @@ class CategoryMysqlAdapterTest {
         assertEquals("Gadgets", category.getName());
         assertEquals("Gadgets description", category.getDescription());
     }
-
-
-
-
 }

@@ -2,15 +2,23 @@ package com.emazon.stock_service.adapters.drivend.jpa.mysql.adapter;
 
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.entity.BrandEntity;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.BrandAlreadyExistsException;
+import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.ElementNotFoundException;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.mapper.IBrandEntityMapper;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.repository.IBrandRepository;
 import com.emazon.stock_service.domain.model.Brand;
+import com.emazon.stock_service.domain.model.Category;
+import com.emazon.stock_service.domain.model.CustomPage;
+import com.emazon.stock_service.domain.model.SortDirection;
+import com.emazon.stock_service.domain.util.DomainConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.data.domain.*;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +31,7 @@ class BrandMysqlAdapterTest {
     private IBrandRepository brandRepository;
 
     @Mock
-    private IBrandEntityMapper brandEntityMapper; ;
+    private IBrandEntityMapper brandEntityMapper;
 
     @InjectMocks
     private BrandMysqlAdapter brandMysqlAdapter;
@@ -79,4 +87,113 @@ class BrandMysqlAdapterTest {
                 brandMysqlAdapter.saveBrand(brand)
         );
     }
+    @Test
+    void getPaginationCategories_NoCategories_ShouldThrowElementNotFoundException() {
+        // Arrange
+        SortDirection sortDirection = SortDirection.ASC; // Configura la dirección de ordenación
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name"))); // Configura el Pageable
+        Page<BrandEntity> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0); // Crea una página vacía
+
+        when(brandRepository.findAll(any(Pageable.class))).thenReturn(emptyPage); // Simula el retorno de una página vacía
+
+        // Act & Assert
+        assertThrows(ElementNotFoundException.class, () -> {
+            brandMysqlAdapter.getPaginationBrands(sortDirection, 0, 10);
+        });
+    }
+    @Test
+    void getPaginationCategories_ShouldReturnCustomPage() {
+        // Arrange
+        BrandEntity brandEntity = new BrandEntity(1L, "Electronics", "Devices");
+        List<BrandEntity> brandEntities = List.of(brandEntity);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name")));
+        Page<BrandEntity> bransPage = new PageImpl<>(brandEntities, pageable, brandEntities.size());
+
+        when(brandRepository.findAll(pageable)).thenReturn(bransPage);
+
+        // Act
+        CustomPage<Brand> result = brandMysqlAdapter.getPaginationBrands(SortDirection.ASC, 0, 10);
+
+        // Assert
+        assertEquals(0, bransPage.getNumber());
+        assertEquals(10, bransPage.getSize());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isFirst());
+        assertTrue(result.isLast());
+        assertEquals(1, result.getContent().size());
+
+    }
+    @Test
+    void getPaginationCategories_ShouldThrowElementNotFoundException_WhenNoCategoriesFound() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("name")));
+        Page<BrandEntity> bransPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+
+        when(brandRepository.findAll(any(Pageable.class))).thenReturn(bransPage);
+
+        // Act & Assert
+        assertThrows(ElementNotFoundException.class, () -> {
+            brandMysqlAdapter.getPaginationBrands(SortDirection.ASC, 0, 10);
+        });
+    }
+    @Test
+    void getPaginationCategories_ShouldReturnCustomPage_WhenSortedDescending() {
+        // Arrange
+        BrandEntity brandEntity = new BrandEntity(1L, "Electronics", "Devices");
+        List<BrandEntity> brandEntities = List.of(brandEntity);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("name")));
+        Page<BrandEntity> brandspage = new PageImpl<>(brandEntities, pageable, brandEntities.size());
+
+        when(brandRepository.findAll(any(Pageable.class))).thenReturn(brandspage);
+
+        // Act
+        CustomPage<Brand> result =  brandMysqlAdapter.getPaginationBrands(SortDirection.ASC, 0, 10);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertTrue(result.isFirst());
+        assertTrue(result.isLast());
+        assertEquals("Electronics", result.getContent().get(0).getName());
+    }
+    @Test
+    void testCategoryConstructor_WithNullDescription_ShouldThrowException() {
+        // Act & Assert
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            new Category(1L, "Gadgets", null);
+        });
+
+        assertEquals(DomainConstants.FIELD_DESCRIPTION_NULL_MESSAGE, exception.getMessage());
+    }
+    //    @Test
+//    void testCategoryConstructor_WithEmptyName_ShouldThrowException() {
+//        // Act & Assert
+//        Exception exception = assertThrows(EmptyFieldException.class, () -> {
+//            new Category(1L, "", "Gadgets description");
+//        });
+//
+//        assertEquals(DomainConstants.Field.NAME.toString(), exception.getMessage());
+//    }
+//    @Test
+//    void testCategoryConstructor_WithNameContainingOnlySpaces_ShouldThrowException() {
+//        // Act & Assert
+//        Exception exception = assertThrows(EmptyFieldException.class, () -> {
+//            new Category(1L, "   ", "Gadgets description");
+//        });
+//
+//        assertEquals(DomainConstants.Field.NAME.toString(), exception.getMessage());
+//    }
+    @Test
+    void testCategoryConstructor_WithValidInputs_ShouldCreateCategory() {
+        // Act
+        Category category = new Category(1L, "Gadgets", "Gadgets description");
+
+        // Assert
+        assertEquals(1L, category.getId());
+        assertEquals("Gadgets", category.getName());
+        assertEquals("Gadgets description", category.getDescription());
+    }
+
 }
