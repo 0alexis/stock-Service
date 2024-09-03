@@ -2,7 +2,6 @@ package com.emazon.stock_service.adapters.drivinghttp.dto.request;
 
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 
@@ -26,11 +25,11 @@ public class AddCategoryRequest {
 
     @NotBlank(message = DrivingConstant.FIELD_NAME_NULL_MESSEGE)
     @Size(min = 1, max = 50, message = DrivingConstant.FIELD_NAME_EXCEEDED_SIZE_MESSEGE)
-    @Pattern(regexp = "^[a-zA-Z]+$", message = "Name must contain only letters")
+   // @Pattern(regexp = "^[a-zA-Z]+$", message = "Name must contain only letters")
     private  String name;
 
     @NotBlank(message = DrivingConstant.FIELD_DESCRIPTION_NULL_MESSEGE)
     @Size(min = 1, max = 90, message = DrivingConstant.FIELD_DESCRIPTION_EXCEEDED_SIZE_MESSEGE)
-    @Pattern(regexp = "^[a-zA-Z]+$", message = "Description must contain only letters")
+   // @Pattern(regexp = "^[a-zA-Z]+$", message = "Description must contain only letters")
     private  String description;
 }

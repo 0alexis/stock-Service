@@ -1,4 +1,4 @@
-package com.emazon.stock_service.domain.api.usecase;
+package com.emazon.stock_service.domain.usecase;
 
 import com.emazon.stock_service.domain.exception.InvalidSortDirectionException;
 import com.emazon.stock_service.domain.model.Category;

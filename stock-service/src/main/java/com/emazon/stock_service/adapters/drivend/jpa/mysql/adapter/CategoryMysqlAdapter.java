@@ -42,11 +42,9 @@ public class CategoryMysqlAdapter implements ICategoryPersistencePort {
     }
 
 
+
     @Override
     public CustomPage<Category> getPaginationCategories(SortDirection sortDirection, int page, int size) {
-
-        //Pageable pageable = PageRequest.of( page, size);
-        //Pageable pageable = PageRequest.of(page, size, sortDirection == SortDirection.ASC ? Sort.by("name").ascending() : Sort.by("name").descending());
 
         Sort.Direction direction = (sortDirection == SortDirection.ASC) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Sort.Order order = new Sort.Order(direction, "name");
@@ -64,7 +62,6 @@ public class CategoryMysqlAdapter implements ICategoryPersistencePort {
                 .stream()
                 .map(category -> new Category(category.getId(), category.getName(), category.getDescription()))
                 .toList();
-//        CustomPage<Category> customPage =
         return new CustomPage<>(
                 categoryContent,
                 categoriesPage.getNumber(),

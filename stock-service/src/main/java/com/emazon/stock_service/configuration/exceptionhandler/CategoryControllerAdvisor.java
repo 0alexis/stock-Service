@@ -26,7 +26,7 @@ import java.util.Set;
 
 @ControllerAdvice
 @RequiredArgsConstructor
-public class ControllerAdvisor {
+public class CategoryControllerAdvisor {
 @ExceptionHandler (EmptyFieldException.class)
     public ResponseEntity<ExceptionResponse> handleEmptyFieldException(EmptyFieldException exception){
 
