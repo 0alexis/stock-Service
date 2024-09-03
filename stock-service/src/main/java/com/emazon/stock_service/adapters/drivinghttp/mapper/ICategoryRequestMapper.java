@@ -15,11 +15,9 @@ import org.mapstruct.ReportingPolicy;
 
 public interface ICategoryRequestMapper {
 
-
 //    @Mapping(target = "id", ignore = true)
 //    @Mapping(source = "description", target =
-
-      @Mapping(source = "name", target = "name")
+    @Mapping(source = "name", target = "name")
     Category addRequestToCategory(AddCategoryRequest addCategoryRequest);
     SortDirection toSortDirection(SortDirectionRequest sortDirectionRequestDto);
 
