@@ -44,6 +44,42 @@ class BrandMysqlAdapterTest {
     }
 
     @Test
+    void getBrandById_ValidId_ShouldReturnCategory(){
+        //arranque
+        Long brandId = 1L;
+        BrandEntity brandEntity = new BrandEntity(brandId, "brandname", "brandDescription");
+        Brand brand = new Brand(brandId, "brandname", "brandDescription");
+
+        //simulamos que se encuentra la marca por ID
+        when(brandRepository.findById(brandId)).thenReturn(Optional.of(brandEntity));
+        when(brandEntityMapper.toBrand(brandEntity)).thenReturn(brand);
+        //act
+        Brand returned = brandMysqlAdapter.getBrandById(brandId);
+        //assert
+        assertNotNull(returned);  // Verificamos que el resultado no es null
+        assertEquals(brandId, returned.getId());   // Verificamos que el ID coincide
+        verify(brandRepository, times(1)).findById(brandId);  // Verificamos que se llamó a findById
+        verify(brandEntityMapper).toBrand(brandEntity); // Verificamos que se mapeó correctamente
+    }
+
+    @Test
+    void getCategoryById_InvalidId_ShouldReturnNull(){
+        //arranque
+        Long BrandID = 1L;
+
+        //simulamos que no se encuentra ninguna categoria con ese iD
+        when(brandRepository.findById(BrandID)).thenReturn(Optional.empty());
+
+        //act
+        Brand returned = brandMysqlAdapter.getBrandById(BrandID);
+
+        // Assert
+        assertNull(returned);  // Verificamos que el resultado es null
+        verify(brandRepository).findById(BrandID);  // Verificamos que se llamó a findById
+        verify(brandEntityMapper, never()).toBrand(any());  // Verificamos que no se llamó al mapeo
+    }
+
+    @Test
     void saveBrand_ShouldSaveBrandSuccessfully_WhenBrandDoesNotExist() {
         // Arrange
         Brand brand = new Brand(1L, "Electronics", "Electronic gadgets");

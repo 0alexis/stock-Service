@@ -41,6 +41,12 @@ public class CategoryMysqlAdapter implements ICategoryPersistencePort {
                 .orElse(null);
     }
 
+    @Override
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id)
+                .map(categoryEntityMapper::toCategory)
+                .orElse(null);
+    }
 
 
     @Override

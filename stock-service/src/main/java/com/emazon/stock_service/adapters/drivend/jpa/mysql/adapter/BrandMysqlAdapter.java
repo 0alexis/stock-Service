@@ -39,6 +39,12 @@ public class BrandMysqlAdapter implements IBrandPersistencePort {
                 .map(brandEntityMapper::toBrand)
                 .orElse(null);
     }
+    @Override
+    public Brand getBrandById(Long id) {
+        return brandRepository.findById(id)
+                .map(brandEntityMapper::toBrand)
+                .orElse(null);
+    }
 
 
     @Override

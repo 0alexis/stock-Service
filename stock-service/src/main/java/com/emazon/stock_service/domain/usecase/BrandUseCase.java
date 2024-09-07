@@ -27,6 +27,11 @@ public class BrandUseCase implements IBrandServicePort {
         brandPersistencePort.saveBrand(brand);
     }
 
+    @Override
+    public Brand getBrandById(Long id) {
+        return brandPersistencePort.getBrandById(id);
+    }
+
 
     @Override
     public CustomPage<Brand> getPaginationCategoriesByAscAndDesc(SortDirection sortDirection,int page, int size) {

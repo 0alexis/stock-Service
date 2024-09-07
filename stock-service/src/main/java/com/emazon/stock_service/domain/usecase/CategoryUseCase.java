@@ -28,6 +28,11 @@ public class CategoryUseCase implements ICategoryServicePort {
     }
 
     @Override
+    public Category getCategoryById(Long id) {
+        return categoryPersistencePort.getCategoryById(id);
+    }
+
+    @Override
     public CustomPage<Category> getPaginationCategoriesByAscAndDesc(SortDirection sortDirection, int page, int size) {
         CustomPage<Category> customPageCategory = categoryPersistencePort.getPaginationCategories(sortDirection, page, size);
 

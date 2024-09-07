@@ -30,6 +30,39 @@ class BrandUseCaseTest {
     }
 
     @Test
+    void getBrandById_BrandExists_ShouldReturnBrand() {
+        // Arrange
+        Long brandId = 1L;
+        Brand expectedBrand = new Brand(1L, "BrandName", "BrandDescription");
+
+        // Simulamos el comportamiento del puerto de persistencia
+        when(brandPersistencePort.getBrandById(brandId)).thenReturn(expectedBrand);
+
+        // Act
+        Brand result = brandUseCase.getBrandById(brandId);
+
+        // Assert
+        assertNotNull(result); // Verificamos que el resultado no sea null
+        assertEquals(expectedBrand, result); // Verificamos que el resultado sea la marca esperada
+        verify(brandPersistencePort).getBrandById(brandId); // Verificamos que se llamó al puerto de persistencia
+    }
+    @Test
+    void getBrandById_BrandDoesNotExist_ShouldReturnNull() {
+        // Arrange
+        Long brandId = 999L;
+
+        // Simulamos que el puerto de persistencia devuelve null cuando no se encuentra la marca
+        when(brandPersistencePort.getBrandById(brandId)).thenReturn(null);
+
+        // Act
+        Brand result = brandUseCase.getBrandById(brandId);
+
+        // Assert
+        assertNull(result); // Verificamos que el resultado sea null
+        verify(brandPersistencePort).getBrandById(brandId); // Verificamos que se llamó al puerto de persistencia
+    }
+
+    @Test
     void testCreateCategorySuccess() {
         // Arrange
         Brand brand = new Brand(1L, "Brand", "Description");

@@ -33,6 +33,39 @@ class CategoryUseCaseTest {
     }
 
     @Test
+    void getCategoryById_CategoryExists_ShouldReturnCategory() {
+        // Arrange
+        Long categoryId = 1L;
+        Category expectedCategory = new Category(1L, "CategoryName", "Description");
+
+        // Simulamos el comportamiento del puerto de persistencia
+        when(categoryPersistencePort.getCategoryById(categoryId)).thenReturn(expectedCategory);
+
+        // Act
+        Category result = categoryUseCase.getCategoryById(categoryId);
+
+        // Assert
+        assertNotNull(result); // Verificamos que el resultado no sea null
+        assertEquals(expectedCategory, result); // Verificamos que el resultado sea la categoría esperada
+        verify(categoryPersistencePort).getCategoryById(categoryId); // Verificamos que se llamó al puerto de persistencia
+    }
+    @Test
+    void getCategoryById_CategoryDoesNotExist_ShouldReturnNull() {
+        // Arrange
+        Long categoryId = 999L;
+
+        // Simulamos que el puerto de persistencia devuelve null cuando no se encuentra la categoría
+        when(categoryPersistencePort.getCategoryById(categoryId)).thenReturn(null);
+
+        // Act
+        Category result = categoryUseCase.getCategoryById(categoryId);
+
+        // Assert
+        assertNull(result); // Verificamos que el resultado sea null
+        verify(categoryPersistencePort).getCategoryById(categoryId); // Verificamos que se llamó al puerto de persistencia
+    }
+
+    @Test
     void testCreateCategorySuccess() {
     // Arrange
     Category category = new Category(1L, "Books", "Varius books");
@@ -44,7 +77,6 @@ class CategoryUseCaseTest {
     assertDoesNotThrow(() -> categoryUseCase.saveCategory(category));
     verify(categoryPersistencePort, times(1)).saveCategory(category);
 }
-
     @Test
     void testSaveCategory_CategoryAlreadyExists() {
     //GIVEN
