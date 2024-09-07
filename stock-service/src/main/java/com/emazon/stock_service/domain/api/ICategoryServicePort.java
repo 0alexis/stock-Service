@@ -8,6 +8,7 @@ import com.emazon.stock_service.domain.model.SortDirection;
 public interface ICategoryServicePort {
 
     void saveCategory(Category category);
+    Category getCategoryById(Long id);
     CustomPage<Category> getPaginationCategoriesByAscAndDesc(SortDirection sortDirection, int page, int size);
 
 }

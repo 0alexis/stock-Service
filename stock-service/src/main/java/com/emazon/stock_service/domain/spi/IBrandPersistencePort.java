@@ -7,6 +7,7 @@ import com.emazon.stock_service.domain.model.SortDirection;
 public interface IBrandPersistencePort {
     void saveBrand(Brand brand);
     Brand findByName(String name);
+    Brand getBrandById(Long id);
     CustomPage<Brand> getPaginationBrands(SortDirection sortDirection, int page, int size);
 
 }

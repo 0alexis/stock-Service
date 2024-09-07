@@ -1,9 +1,7 @@
 package com.emazon.stock_service.adapters.drivend.jpa.mysql.mapper;
 
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.entity.BrandEntity;
-import com.emazon.stock_service.adapters.drivend.jpa.mysql.entity.CategoryEntity;
 import com.emazon.stock_service.adapters.drivinghttp.dto.response.BrandPaginationResponse;
-import com.emazon.stock_service.adapters.drivinghttp.dto.response.CategoryPaginationResponse;
 import com.emazon.stock_service.domain.model.Brand;
 import com.emazon.stock_service.domain.model.CustomPage;
 import org.mapstruct.Mapper;

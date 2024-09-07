@@ -1,6 +1,7 @@
 package com.emazon.stock_service.configuration.exceptionhandler;
 
 
+import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.BrandAlreadyExistsException;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.CategoryAlreadyExistsException;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.ElementNotFoundException;
 import com.emazon.stock_service.adapters.drivend.jpa.mysql.exception.NoDataFoundException;
@@ -26,7 +27,7 @@ import java.util.Set;
 
 @ControllerAdvice
 @RequiredArgsConstructor
-public class CategoryControllerAdvisor {
+public class ControllerAdvisor {
 @ExceptionHandler (EmptyFieldException.class)
     public ResponseEntity<ExceptionResponse> handleEmptyFieldException(EmptyFieldException exception){
 
@@ -48,6 +49,11 @@ public class CategoryControllerAdvisor {
     }
     @ExceptionHandler(CategoryAlreadyExistsException.class)
     public ResponseEntity<ExceptionResponse> handleUserAlreadyExistsException() {
+        return ResponseEntity.badRequest().body(new ExceptionResponse(Constants.PRODUCT_ALREADY_EXISTS_EXCEPTION_MESSAGE,
+                HttpStatus.BAD_REQUEST.toString(), LocalDateTime.now()));
+    }
+    @ExceptionHandler(BrandAlreadyExistsException.class)
+    public ResponseEntity<ExceptionResponse> handleBrandAlreadyExistsException() {
         return ResponseEntity.badRequest().body(new ExceptionResponse(Constants.PRODUCT_ALREADY_EXISTS_EXCEPTION_MESSAGE,
                 HttpStatus.BAD_REQUEST.toString(), LocalDateTime.now()));
     }

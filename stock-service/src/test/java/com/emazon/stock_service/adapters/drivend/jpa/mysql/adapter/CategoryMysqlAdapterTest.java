@@ -47,7 +47,41 @@ class CategoryMysqlAdapterTest {
         categoryMysqlAdapter = new CategoryMysqlAdapter(categoryRepository, categoryEntityMapper);
     }
 
+    @Test
+    void getCategoryById_ValidId_ShouldReturnCategory(){
+        //arranque
+        Long categoryId = 1L;
+        CategoryEntity categoryEntity = new CategoryEntity(categoryId, "Categoryname", "categoryDescription");
+        Category category = new Category(categoryId, "Categoryname", "categoryDescription");
 
+        //simulamos que se encuentra la categoria por ID
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(categoryEntity));
+        when(categoryEntityMapper.toCategory(categoryEntity)).thenReturn(category);
+        //act
+        Category returned = categoryMysqlAdapter.getCategoryById(categoryId);
+        //assert
+        assertNotNull(returned);  // Verificamos que el resultado no es null
+        assertEquals(categoryId, returned.getId());   // Verificamos que el ID coincide
+        verify(categoryRepository, times(1)).findById(categoryId);  // Verificamos que se llamó a findById
+        verify(categoryEntityMapper).toCategory(categoryEntity); // Verificamos que se mapeó correctamente
+    }
+
+    @Test
+    void getCategoryById_InvalidId_ShouldReturnNull(){
+        //arranque
+        Long categoryId = 1L;
+
+        //simulamos que no se encuentra ninguna categoria con ese iD
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        //act
+        Category returned = categoryMysqlAdapter.getCategoryById(categoryId);
+
+        // Assert
+        assertNull(returned);  // Verificamos que el resultado es null
+        verify(categoryRepository).findById(categoryId);  // Verificamos que se llamó a findById
+        verify(categoryEntityMapper, never()).toCategory(any());  // Verificamos que no se llamó al mapeo
+    }
     @Test
     void saveCategory_ShouldSaveCategorySuccessfully_WhenCategoryDoesNotExist() {
         // Arrange
